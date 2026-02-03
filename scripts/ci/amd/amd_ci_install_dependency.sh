@@ -23,6 +23,20 @@ fi
 # Fix permissions on pip cache, ignore errors from concurrent access or missing temp files
 docker exec ci_sglang chown -R root:root /sgl-data/pip-cache 2>/dev/null || true
 docker exec ci_sglang pip install --cache-dir=/sgl-data/pip-cache --upgrade pip
+
+# === FIX: Temporarily downgrade triton if version is 3.6.x to prevent torch replacement ===
+# Triton 3.6.x causes pip to replace ROCm torch with CUDA torch during dependency resolution
+# Temporarily install triton 3.5.1 from local ROCm wheel, then restore after dependencies are installed
+TRITON_VERSION=$(docker exec ci_sglang pip show triton 2>/dev/null | grep '^Version:' | awk '{print $2}' || echo "")
+TRITON_NEEDS_RESTORE="false"
+if [[ "$TRITON_VERSION" == 3.6.* ]]; then
+    echo "Detected triton $TRITON_VERSION, temporarily downgrading to 3.5.1 to prevent torch replacement issue..."
+    docker exec ci_sglang pip install --cache-dir=/sgl-data/pip-cache /triton-3.5.1+rocm7.2.0.gita272dfa8-cp310-cp310-linux_x86_64.whl
+    TRITON_NEEDS_RESTORE="true"
+    echo "Triton temporarily downgraded to 3.5.1"
+fi
+# === END FIX ===
+
 docker exec ci_sglang pip uninstall sgl-kernel -y || true
 docker exec ci_sglang pip uninstall sglang -y || true
 # Clear Python cache to ensure latest code is used
@@ -149,7 +163,9 @@ cat > dummy-grok/config.json << 'EOF'
   "torch_dtype": "bfloat16"
 }
 EOF
-docker cp ./dummy-grok ci_sglang:/
+# docker exec -w / ci_sglang mkdir -p /dummy-grok
+# mkdir -p dummy-grok && wget https://sharkpublic.blob.core.windows.net/sharkpublic/sglang/dummy_grok.json -O dummy-grok/config.json
+# docker cp ./dummy-grok ci_sglang:/
 
 docker exec ci_sglang pip install --cache-dir=/sgl-data/pip-cache huggingface_hub[hf_xet]
 docker exec ci_sglang pip install --cache-dir=/sgl-data/pip-cache pytest
@@ -213,16 +229,17 @@ echo "[CI-AITER-CHECK] AITER version inside CI image: ${IMAGE_AITER_VERSION}"
 #############################################
 NEED_REBUILD="false"
 
-if [[ "${IMAGE_AITER_VERSION}" == "none" ]]; then
-    echo "[CI-AITER-CHECK] No AITER found in image"
+if [[ "${IMAGE_AITER_VERSION}" == "vnone" || "${IMAGE_AITER_VERSION}" == "v" ]]; then
+    echo "[CI-AITER-CHECK] No AITER found in image → rebuild needed"
     NEED_REBUILD="true"
-elif [[ "${IMAGE_AITER_VERSION}" != "${REPO_AITER_COMMIT}" ]]; then
-    echo "[CI-AITER-CHECK] Version mismatch:"
-    echo "     Image: ${IMAGE_AITER_VERSION}"
-    echo "     Repo : ${REPO_AITER_COMMIT}"
-    NEED_REBUILD="true"
+elif [[ "${IMAGE_AITER_VERSION}" == "${REPO_AITER_COMMIT}" ]]; then
+    echo "[CI-AITER-CHECK] AITER version matches"
+elif [[ "${IMAGE_AITER_VERSION}" =~ (dev|\+g[0-9a-f]+) ]]; then
+    # Dev/patched version (contains 'dev' or git hash) → preserve it
+    echo "[CI-AITER-CHECK] Dev/patched version detected: ${IMAGE_AITER_VERSION} → skipping rebuild"
 else
-    echo "[CI-AITER-CHECK] AITER version matches → using image's version."
+    echo "[CI-AITER-CHECK] Version mismatch: image=${IMAGE_AITER_VERSION}, repo=${REPO_AITER_COMMIT}"
+    NEED_REBUILD="true"
 fi
 
 
@@ -277,3 +294,15 @@ docker exec ci_sglang ls -la /sgl-workspace/aiter/aiter/jit/ 2>/dev/null || echo
 # Pre-build AITER kernels to avoid timeout during tests
 echo "Warming up AITER JIT kernels..."
 docker exec -e SGLANG_USE_AITER=1 ci_sglang python3 /sglang-checkout/scripts/ci/amd/amd_ci_warmup_aiter.py || echo "AITER warmup completed (some kernels may not be available)"
+
+# === Restore triton to original version if it was temporarily downgraded ===
+if [[ "$TRITON_NEEDS_RESTORE" == "true" ]]; then
+    echo "Restoring triton to original version..."
+    # Triton 3.6.x is an editable install from /sgl-workspace/triton-custom (pip install -e .)
+    if docker exec ci_sglang test -d /sgl-workspace/triton-custom; then
+        docker exec -w /sgl-workspace/triton-custom ci_sglang pip install --cache-dir=/sgl-data/pip-cache -e .
+        echo "Triton restored from /sgl-workspace/triton-custom"
+    else
+        echo "Warning: /sgl-workspace/triton-custom not found, triton remains at 3.5.1"
+    fi
+fi
