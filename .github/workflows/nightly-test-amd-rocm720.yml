@@ -1,59 +1,59 @@
 name: Nightly Test (AMD ROCm 7.2)
 
-on: []
-#   pull_request:
-#     branches:
-#       - main
-#     paths:
-#       - "docker/rocm720.Dockerfile"
-#       - "scripts/ci/amd/amd_ci_start_container.sh"
-#       - ".github/workflows/nightly-test-amd-rocm720.yml"
-#   workflow_dispatch:
-#     inputs:
-#       job_filter:
-#         description: 'Select which job to run (leave empty or "all" to run all jobs)'
-#         required: false
-#         type: choice
-#         default: 'all'
-#         options:
-#           - 'all'
-#           # MI30x ROCm 7.2 Unit Tests
-#           - 'nightly-test-1-gpu-unit-rocm720'
-#           # MI30x ROCm 7.2 Accuracy Tests (GSM8K / MMMU)
-#           - 'nightly-accuracy-2-gpu-rocm720'
-#           - 'nightly-accuracy-2-gpu-vlm-rocm720'
-#           - 'nightly-perf-2-gpu-text-rocm720'
-#           - 'nightly-perf-2-gpu-vlm-rocm720'
-#           - 'nightly-accuracy-8-gpu-rocm720'
-#           # MI30x ROCm 7.2 Accuracy + Performance Tests (combined)
-#           - 'nightly-8-gpu-grok1-int4-rocm720'
-#           - 'nightly-8-gpu-grok2-rocm720'
-#           - 'nightly-8-gpu-deepseek-v31-rocm720'
-#           - 'nightly-8-gpu-deepseek-v32-rocm720'
-#           - 'nightly-8-gpu-deepseek-v32-mtp-rocm720'
-#           - 'nightly-8-gpu-kimi-k2-rocm720'
-#           # MI35x ROCm 7.2 jobs
-#           - 'nightly-test-1-gpu-mi35x-rocm720'
-#           - 'nightly-accuracy-8-gpu-mi35x-rocm720'
-#           - 'nightly-8-gpu-mi35x-grok1-int4-rocm720'
-#           - 'nightly-8-gpu-mi35x-grok2-rocm720'
-#           - 'nightly-8-gpu-mi35x-deepseek-r1-mxfp4-rocm720'
-#           - 'nightly-accuracy-8-gpu-mi35x-deepseek-v32-rocm720'
-#           - 'nightly-accuracy-8-gpu-mi35x-deepseek-v32-mtp-rocm720'
-#           - 'nightly-perf-8-gpu-mi35x-deepseek-v32-basic-rocm720'
-#           - 'nightly-perf-8-gpu-mi35x-deepseek-v32-mtp-rocm720'
-#   workflow_call:
-#     inputs:
-#       ref:
-#         description: 'Git ref (branch, tag, or SHA) to test. If not provided, uses the default branch.'
-#         required: false
-#         type: string
-#         default: ''
-#       job_filter:
-#         description: 'Select which job to run (leave empty or "all" to run all jobs)'
-#         required: false
-#         type: string
-#         default: 'all'
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "docker/rocm720.Dockerfile"
+      - "scripts/ci/amd/amd_ci_start_container.sh"
+      - ".github/workflows/nightly-test-amd-rocm720.yml"
+  workflow_dispatch:
+    inputs:
+      job_filter:
+        description: 'Select which job to run (leave empty or "all" to run all jobs)'
+        required: false
+        type: choice
+        default: 'all'
+        options:
+          - 'all'
+          # MI30x ROCm 7.2 Unit Tests
+          - 'nightly-test-1-gpu-unit-rocm720'
+          # MI30x ROCm 7.2 Accuracy Tests (GSM8K / MMMU)
+          - 'nightly-accuracy-2-gpu-rocm720'
+          - 'nightly-accuracy-2-gpu-vlm-rocm720'
+          - 'nightly-perf-2-gpu-text-rocm720'
+          - 'nightly-perf-2-gpu-vlm-rocm720'
+          - 'nightly-accuracy-8-gpu-rocm720'
+          # MI30x ROCm 7.2 Accuracy + Performance Tests (combined)
+          - 'nightly-8-gpu-grok1-int4-rocm720'
+          - 'nightly-8-gpu-grok2-rocm720'
+          - 'nightly-8-gpu-deepseek-v31-rocm720'
+          - 'nightly-8-gpu-deepseek-v32-rocm720'
+          - 'nightly-8-gpu-deepseek-v32-mtp-rocm720'
+          - 'nightly-8-gpu-kimi-k2-rocm720'
+          # MI35x ROCm 7.2 jobs
+          - 'nightly-test-1-gpu-mi35x-rocm720'
+          - 'nightly-accuracy-8-gpu-mi35x-rocm720'
+          - 'nightly-8-gpu-mi35x-grok1-int4-rocm720'
+          - 'nightly-8-gpu-mi35x-grok2-rocm720'
+          - 'nightly-8-gpu-mi35x-deepseek-r1-mxfp4-rocm720'
+          - 'nightly-accuracy-8-gpu-mi35x-deepseek-v32-rocm720'
+          - 'nightly-accuracy-8-gpu-mi35x-deepseek-v32-mtp-rocm720'
+          - 'nightly-perf-8-gpu-mi35x-deepseek-v32-basic-rocm720'
+          - 'nightly-perf-8-gpu-mi35x-deepseek-v32-mtp-rocm720'
+  workflow_call:
+    inputs:
+      ref:
+        description: 'Git ref (branch, tag, or SHA) to test. If not provided, uses the default branch.'
+        required: false
+        type: string
+        default: ''
+      job_filter:
+        description: 'Select which job to run (leave empty or "all" to run all jobs)'
+        required: false
+        type: string
+        default: 'all'
 
 concurrency:
   group: nightly-test-amd-rocm720-${{ inputs.ref || github.ref }}
@@ -74,7 +74,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -104,7 +104,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -133,7 +133,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -163,7 +163,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -194,7 +194,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -225,7 +225,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -265,7 +265,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -308,7 +308,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -351,7 +351,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -394,7 +394,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -435,7 +435,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -476,7 +476,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -507,7 +507,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260130-preview --gpu-arch gfx950-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260203-preview --gpu-arch gfx950-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -539,7 +539,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260130-preview --gpu-arch gfx950-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260203-preview --gpu-arch gfx950-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -571,7 +571,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260130-preview --gpu-arch gfx950-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260203-preview --gpu-arch gfx950-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -617,7 +617,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260130-preview --gpu-arch gfx950-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260203-preview --gpu-arch gfx950-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -663,7 +663,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260130-preview --gpu-arch gfx950-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260203-preview --gpu-arch gfx950-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -707,7 +707,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260130-preview --gpu-arch gfx950-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260203-preview --gpu-arch gfx950-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -740,7 +740,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260130-preview --gpu-arch gfx950-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260203-preview --gpu-arch gfx950-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -773,7 +773,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260130-preview --gpu-arch gfx950-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260203-preview --gpu-arch gfx950-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -806,7 +806,7 @@ jobs:
       - name: Setup docker (ROCm 7.2)
         run: |
           touch github_summary.md
-          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260130-preview --gpu-arch gfx950-rocm720
+          bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260203-preview --gpu-arch gfx950-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 

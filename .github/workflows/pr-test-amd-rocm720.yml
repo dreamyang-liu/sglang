@@ -3,49 +3,49 @@ name: PR Test ROCm 7.2 (AMD)
 # Format: "[stage-name] sha" for fork PRs, "[stage-name]" for non-fork, default for normal runs
 run-name: ${{ inputs.target_stage && (inputs.pr_head_sha && format('[{0}] {1}', inputs.target_stage, inputs.pr_head_sha) || format('[{0}]', inputs.target_stage)) || '' }}
 
-on: []
-#   push:
-#     branches: [ main ]
-#     paths:
-#       - "python/**"
-#       - "scripts/ci/**"
-#       - "test/**"
-#       - "sgl-kernel/**"
-#       - ".github/workflows/pr-test-amd-rocm720.yml"
-#       - "docker/rocm720.Dockerfile"
-#   pull_request:
-#     branches: [ main ]
-#     paths:
-#       - "python/**"
-#       - "scripts/ci/**"
-#       - "test/**"
-#       - "sgl-kernel/**"
-#       - ".github/workflows/pr-test-amd-rocm720.yml"
-#       - "docker/rocm720.Dockerfile"
-#   workflow_dispatch:
-#     inputs:
-#       target_stage:
-#         description: "Specific stage to run (optional, for quick testing)"
-#         required: false
-#         type: string
-#         default: ""
-#       pr_head_sha:
-#         description: "PR head SHA to checkout (for /rerun-stage on fork PRs)"
-#         required: false
-#         type: string
-#         default: ""
-#   workflow_call:
-#     inputs:
-#       ref:
-#         description: 'Git ref (branch, tag, or SHA) to test. If not provided, uses the default branch.'
-#         required: false
-#         type: string
-#         default: ''
-#       run_all_tests:
-#         description: "Run all tests (for releasing or testing purpose)"
-#         required: false
-#         type: boolean
-#         default: false
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "python/**"
+      - "scripts/ci/**"
+      - "test/**"
+      - "sgl-kernel/**"
+      - ".github/workflows/pr-test-amd-rocm720.yml"
+      - "docker/rocm720.Dockerfile"
+  pull_request:
+    branches: [ main ]
+    paths:
+      - "python/**"
+      - "scripts/ci/**"
+      - "test/**"
+      - "sgl-kernel/**"
+      - ".github/workflows/pr-test-amd-rocm720.yml"
+      - "docker/rocm720.Dockerfile"
+  workflow_dispatch:
+    inputs:
+      target_stage:
+        description: "Specific stage to run (optional, for quick testing)"
+        required: false
+        type: string
+        default: ""
+      pr_head_sha:
+        description: "PR head SHA to checkout (for /rerun-stage on fork PRs)"
+        required: false
+        type: string
+        default: ""
+  workflow_call:
+    inputs:
+      ref:
+        description: 'Git ref (branch, tag, or SHA) to test. If not provided, uses the default branch.'
+        required: false
+        type: string
+        default: ''
+      run_all_tests:
+        description: "Run all tests (for releasing or testing purpose)"
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   # Include pr_head_sha in group for /rerun-stage dispatches to avoid collisions with main branch runs
@@ -132,7 +132,7 @@ jobs:
         run: bash scripts/ensure_vram_clear.sh rocm
 
       - name: Start CI container
-        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -179,7 +179,7 @@ jobs:
         run: bash scripts/ensure_vram_clear.sh rocm
 
       - name: Start CI container
-        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -222,7 +222,7 @@ jobs:
         run: bash scripts/ensure_vram_clear.sh rocm
 
       - name: Start CI container
-        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -263,7 +263,7 @@ jobs:
         run: bash scripts/ensure_vram_clear.sh rocm
 
       - name: Start CI container
-        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -302,7 +302,7 @@ jobs:
         run: bash scripts/ensure_vram_clear.sh rocm
 
       - name: Start CI container
-        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260130-preview --gpu-arch gfx950-rocm720
+        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260203-preview --gpu-arch gfx950-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -342,7 +342,7 @@ jobs:
         run: bash scripts/ensure_vram_clear.sh rocm
 
       - name: Start CI container
-        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -382,7 +382,7 @@ jobs:
         run: bash scripts/ensure_vram_clear.sh rocm
 
       - name: Start CI container
-        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -422,7 +422,7 @@ jobs:
           pattern: wheel-python3.10-cuda12.9
 
       - name: Start CI container
-        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -542,7 +542,7 @@ jobs:
           pattern: wheel-python3.10-cuda12.9
 
       - name: Start CI container
-        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -663,7 +663,7 @@ jobs:
         run: bash scripts/ensure_vram_clear.sh rocm
 
       - name: Start CI container
-        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260130-preview --gpu-arch gfx942-rocm720
+        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi30x-20260203-preview --gpu-arch gfx942-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
@@ -709,7 +709,7 @@ jobs:
         run: bash scripts/ensure_vram_clear.sh rocm
 
       - name: Start CI container
-        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260130-preview --gpu-arch gfx950-rocm720
+        run: bash scripts/ci/amd/amd_ci_start_container.sh --custom-image rocm/sgl-dev:v0.5.8-rocm720-mi35x-20260203-preview --gpu-arch gfx950-rocm720
         env:
           GITHUB_WORKSPACE: ${{ github.workspace }}
 
