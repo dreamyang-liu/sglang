@@ -215,7 +215,9 @@ class LoRAManager:
         """
         Validate if the LoRA IDs in the batch can be loaded into the current LoRA memory pool.
         """
-        if len(lora_ids) > self.max_loras_per_batch:
+        # Count only actual LoRA adapters (exclude None which represents the base model)
+        actual_lora_ids = {lora_id for lora_id in lora_ids if lora_id is not None}
+        if len(actual_lora_ids) > self.max_loras_per_batch:
             return False
 
         # skip pinned LoRA check if no pinned LoRA adapters are loaded.
@@ -237,7 +239,7 @@ class LoRAManager:
             f"({self.num_pinned_loras}). This indicates a bug in the LoRA loading logic."
         )
 
-        required_slots = len(lora_ids) - pinned_loras_in_batch
+        required_slots = len(actual_lora_ids) - pinned_loras_in_batch
         mem_pool_vacancy = self.memory_pool.max_loras_per_batch - self.num_pinned_loras
 
         return required_slots <= mem_pool_vacancy
@@ -248,7 +250,9 @@ class LoRAManager:
         # Load active loras into lora memory pool
         cur_uids = new_loras | running_loras
 
-        assert len(cur_uids) <= self.max_loras_per_batch
+        # Only count actual LoRA adapters (None represents base model, doesn't need a slot)
+        actual_lora_count = sum(1 for uid in cur_uids if uid is not None)
+        assert actual_lora_count <= self.max_loras_per_batch
         self.memory_pool.prepare_lora_batch(
             cur_uids=cur_uids,
             lora_adapters=self.loras,
