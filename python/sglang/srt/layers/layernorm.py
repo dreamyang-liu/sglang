@@ -64,21 +64,11 @@ if _is_cuda or _is_xpu:
         gemma_rmsnorm,
         rmsnorm,
     )
-_vllm_layernorm_available = False
-rms_norm = None
-fused_add_rms_norm = None
-
 if _use_aiter:
     from aiter import rmsnorm2d_fwd as rms_norm
     from aiter import rmsnorm2d_fwd_with_add as fused_add_rms_norm
 elif _is_hip:
-    try:
-        from vllm._custom_ops import fused_add_rms_norm, rms_norm
-
-        _vllm_layernorm_available = True
-    except ImportError:
-        # Will use forward_native as fallback
-        pass
+    from vllm._custom_ops import fused_add_rms_norm, rms_norm
 
 logger = logging.getLogger(__name__)
 
@@ -191,10 +181,6 @@ class RMSNorm(MultiPlatformOp):
         residual: Optional[torch.Tensor] = None,
         post_residual_addition: Optional[torch.Tensor] = None,
     ) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
-        # Fallback to native implementation if vllm is not available
-        if not _use_aiter and not _vllm_layernorm_available:
-            return self.forward_native(x, residual, post_residual_addition)
-
         if not x.is_contiguous():
             # NOTE: Remove this if aiter kernel supports discontinuous input
             x = x.contiguous()
