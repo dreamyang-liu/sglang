@@ -1,0 +1,268 @@
+{
+  "timestamp": "2026-02-20T22:52:28.908956",
+  "available_gpus": 4,
+  "timeout_seconds": 600,
+  "repeat_count": 3,
+  "results": [
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 1,
+      "tp_size": 1,
+      "startup_time_seconds": 84.07571911811829,
+      "success": true,
+      "error_message": null,
+      "run_index": 0
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 1,
+      "tp_size": 1,
+      "startup_time_seconds": 87.07643938064575,
+      "success": true,
+      "error_message": null,
+      "run_index": 1
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 1,
+      "tp_size": 1,
+      "startup_time_seconds": 87.07707524299622,
+      "success": true,
+      "error_message": null,
+      "run_index": 2
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 2,
+      "tp_size": 1,
+      "startup_time_seconds": 97.11305570602417,
+      "success": true,
+      "error_message": null,
+      "run_index": 0
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 2,
+      "tp_size": 1,
+      "startup_time_seconds": 102.10885667800903,
+      "success": true,
+      "error_message": null,
+      "run_index": 1
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 2,
+      "tp_size": 1,
+      "startup_time_seconds": 102.12328720092773,
+      "success": true,
+      "error_message": null,
+      "run_index": 2
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 2,
+      "tp_size": 2,
+      "startup_time_seconds": 71.08164691925049,
+      "success": true,
+      "error_message": null,
+      "run_index": 0
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 2,
+      "tp_size": 2,
+      "startup_time_seconds": 67.07645988464355,
+      "success": true,
+      "error_message": null,
+      "run_index": 1
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 2,
+      "tp_size": 2,
+      "startup_time_seconds": 67.08091616630554,
+      "success": true,
+      "error_message": null,
+      "run_index": 2
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 4,
+      "tp_size": 1,
+      "startup_time_seconds": 122.2575306892395,
+      "success": true,
+      "error_message": null,
+      "run_index": 0
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 4,
+      "tp_size": 1,
+      "startup_time_seconds": 129.20310258865356,
+      "success": true,
+      "error_message": null,
+      "run_index": 1
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 4,
+      "tp_size": 1,
+      "startup_time_seconds": 128.20005774497986,
+      "success": true,
+      "error_message": null,
+      "run_index": 2
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 4,
+      "tp_size": 2,
+      "startup_time_seconds": 96.17800498008728,
+      "success": true,
+      "error_message": null,
+      "run_index": 0
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 4,
+      "tp_size": 2,
+      "startup_time_seconds": 88.14944529533386,
+      "success": true,
+      "error_message": null,
+      "run_index": 1
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 4,
+      "tp_size": 2,
+      "startup_time_seconds": 88.16483950614929,
+      "success": true,
+      "error_message": null,
+      "run_index": 2
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 4,
+      "tp_size": 4,
+      "startup_time_seconds": 74.16311502456665,
+      "success": true,
+      "error_message": null,
+      "run_index": 0
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 4,
+      "tp_size": 4,
+      "startup_time_seconds": 68.15248346328735,
+      "success": true,
+      "error_message": null,
+      "run_index": 1
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 4,
+      "tp_size": 4,
+      "startup_time_seconds": 68.12802124023438,
+      "success": true,
+      "error_message": null,
+      "run_index": 2
+    }
+  ],
+  "aggregated": [
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 1,
+      "tp_size": 1,
+      "num_runs": 3,
+      "successful_runs": 3,
+      "startup_times": [
+        84.07571911811829,
+        87.07643938064575,
+        87.07707524299622
+      ],
+      "avg_time": 86.07641124725342,
+      "min_time": 84.07571911811829,
+      "max_time": 87.07707524299622,
+      "std_time": 1.7326502381518558
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 2,
+      "tp_size": 1,
+      "num_runs": 3,
+      "successful_runs": 3,
+      "startup_times": [
+        97.11305570602417,
+        102.10885667800903,
+        102.12328720092773
+      ],
+      "avg_time": 100.44839986165364,
+      "min_time": 97.11305570602417,
+      "max_time": 102.12328720092773,
+      "std_time": 2.8885017807449422
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 2,
+      "tp_size": 2,
+      "num_runs": 3,
+      "successful_runs": 3,
+      "startup_times": [
+        71.08164691925049,
+        67.07645988464355,
+        67.08091616630554
+      ],
+      "avg_time": 68.4130076567332,
+      "min_time": 67.07645988464355,
+      "max_time": 71.08164691925049,
+      "std_time": 2.3111104689517106
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 4,
+      "tp_size": 1,
+      "num_runs": 3,
+      "successful_runs": 3,
+      "startup_times": [
+        122.2575306892395,
+        129.20310258865356,
+        128.20005774497986
+      ],
+      "avg_time": 126.55356367429097,
+      "min_time": 122.2575306892395,
+      "max_time": 129.20310258865356,
+      "std_time": 3.7541243048269997
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 4,
+      "tp_size": 2,
+      "num_runs": 3,
+      "successful_runs": 3,
+      "startup_times": [
+        96.17800498008728,
+        88.14944529533386,
+        88.16483950614929
+      ],
+      "avg_time": 90.83076326052348,
+      "min_time": 88.14944529533386,
+      "max_time": 96.17800498008728,
+      "std_time": 4.630853566138147
+    },
+    {
+      "model_path": "Wan-AI/Wan2.1-I2V-14B-480P-Diffusers",
+      "num_gpus": 4,
+      "tp_size": 4,
+      "num_runs": 3,
+      "successful_runs": 3,
+      "startup_times": [
+        74.16311502456665,
+        68.15248346328735,
+        68.12802124023438
+      ],
+      "avg_time": 70.14787324269612,
+      "min_time": 68.12802124023438,
+      "max_time": 74.16311502456665,
+      "std_time": 3.477322896316685
+    }
+  ]
+}

@@ -5,6 +5,7 @@ import os
 import signal
 import sys
 import threading
+import time
 
 import psutil
 import uvicorn
@@ -17,6 +18,7 @@ from sglang.multimodal_gen.runtime.server_args import (
     set_global_server_args,
 )
 from sglang.multimodal_gen.runtime.utils.logging_utils import configure_logger, logger
+from sglang.multimodal_gen.runtime.utils.startup_profiler import get_startup_profiler
 
 
 def kill_process_tree(parent_pid, include_parent: bool = True, skip_pid: int = None):
@@ -63,7 +65,12 @@ def launch_server(server_args: ServerArgs, launch_http_server: bool = True):
     Args:
         launch_http_server: False for offline local mode
     """
-    configure_logger(server_args)
+    profiler = get_startup_profiler()
+    profiler.set_rank(0)  # Main process is rank 0
+    launch_start_time = time.perf_counter()
+
+    with profiler.profile("configure_logger"):
+        configure_logger(server_args)
 
     # Start a new server with multiple worker processes
     logger.info("Starting server...")
@@ -72,26 +79,28 @@ def launch_server(server_args: ServerArgs, launch_http_server: bool = True):
     processes = []
 
     # Pipes for master to talk to slaves
-    task_pipes_to_slaves_w = []
-    task_pipes_to_slaves_r = []
-    for _ in range(num_gpus - 1):
-        r, w = mp.Pipe(duplex=False)
-        task_pipes_to_slaves_r.append(r)
-        task_pipes_to_slaves_w.append(w)
+    with profiler.profile("create_ipc_pipes"):
+        task_pipes_to_slaves_w = []
+        task_pipes_to_slaves_r = []
+        for _ in range(num_gpus - 1):
+            r, w = mp.Pipe(duplex=False)
+            task_pipes_to_slaves_r.append(r)
+            task_pipes_to_slaves_w.append(w)
 
-    # Pipes for slaves to talk to master
-    result_pipes_from_slaves_w = []
-    result_pipes_from_slaves_r = []
-    for _ in range(num_gpus - 1):
-        r, w = mp.Pipe(duplex=False)
-        result_pipes_from_slaves_r.append(r)
-        result_pipes_from_slaves_w.append(w)
+        # Pipes for slaves to talk to master
+        result_pipes_from_slaves_w = []
+        result_pipes_from_slaves_r = []
+        for _ in range(num_gpus - 1):
+            r, w = mp.Pipe(duplex=False)
+            result_pipes_from_slaves_r.append(r)
+            result_pipes_from_slaves_w.append(w)
 
     # Launch all worker processes
     master_port = server_args.master_port or (server_args.master_port + 100)
     scheduler_pipe_readers = []
     scheduler_pipe_writers = []
 
+    profiler.start("spawn_worker_processes", {"num_gpus": num_gpus})
     for i in range(num_gpus):
         reader, writer = mp.Pipe(duplex=False)
         scheduler_pipe_writers.append(writer)
@@ -132,8 +141,10 @@ def launch_server(server_args: ServerArgs, launch_http_server: bool = True):
         scheduler_pipe_readers.append(reader)
         process.start()
         processes.append(process)
+    profiler.end("spawn_worker_processes")
 
     # Wait for all workers to be ready
+    profiler.start("wait_for_workers_ready")
     scheduler_infos = []
     for writer in scheduler_pipe_writers:
         writer.close()
@@ -166,7 +177,13 @@ def launch_server(server_args: ServerArgs, launch_http_server: bool = True):
         scheduler_infos.append(data)
         reader.close()
 
+    profiler.end("wait_for_workers_ready")
     logger.debug("All workers are ready")
+
+    # Print total launch time
+    total_launch_time = (time.perf_counter() - launch_start_time) * 1000
+    logger.info(f"Server launched in {total_launch_time:.2f} ms ({total_launch_time/1000:.2f} s)")
+    profiler.print_summary()
 
     if launch_http_server:
         logger.info("Starting FastAPI server.")

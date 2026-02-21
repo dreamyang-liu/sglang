@@ -57,6 +57,7 @@ from sglang.multimodal_gen.runtime.utils.perf_logger import (
     PerformanceLogger,
     capture_memory_snapshot,
 )
+from sglang.multimodal_gen.runtime.utils.startup_profiler import get_startup_profiler
 
 logger = init_logger(__name__)
 
@@ -73,6 +74,9 @@ class GPUWorker:
         master_port: int,
         server_args: ServerArgs,
     ):
+        self.profiler = get_startup_profiler()
+        self.profiler.set_rank(rank)
+
         self.local_rank = local_rank
         self.rank = rank
         self.master_port = master_port
@@ -80,35 +84,42 @@ class GPUWorker:
         self.server_args = server_args
         self.pipeline: ComposedPipelineBase = None
 
-        self.init_device_and_model()
-        self.sp_group = get_sp_group()
-        self.sp_cpu_group = self.sp_group.cpu_group
-        self.tp_group = get_tp_group()
-        self.tp_cpu_group = self.tp_group.cpu_group
+        with self.profiler.profile("GPUWorker.init_device_and_model"):
+            self.init_device_and_model()
 
-        self.cfg_group = get_cfg_group()
-        self.cfg_cpu_group = self.cfg_group.cpu_group
+        with self.profiler.profile("GPUWorker.get_parallel_groups"):
+            self.sp_group = get_sp_group()
+            self.sp_cpu_group = self.sp_group.cpu_group
+            self.tp_group = get_tp_group()
+            self.tp_cpu_group = self.tp_group.cpu_group
+
+            self.cfg_group = get_cfg_group()
+            self.cfg_cpu_group = self.cfg_group.cpu_group
 
     def init_device_and_model(self) -> None:
         """Initialize the device and load the model."""
-        torch.get_device_module().set_device(self.local_rank)
+        with self.profiler.profile("set_cuda_device"):
+            torch.get_device_module().set_device(self.local_rank)
+
         # Set environment variables for distributed initialization
         os.environ["MASTER_ADDR"] = "localhost"
         os.environ["MASTER_PORT"] = str(self.master_port)
         os.environ["LOCAL_RANK"] = str(self.local_rank)
         os.environ["RANK"] = str(self.rank)
         os.environ["WORLD_SIZE"] = str(self.server_args.num_gpus)
+
         # initialize the distributed environment
-        maybe_init_distributed_environment_and_model_parallel(
-            tp_size=self.server_args.tp_size,
-            enable_cfg_parallel=self.server_args.enable_cfg_parallel,
-            ulysses_degree=self.server_args.ulysses_degree,
-            ring_degree=self.server_args.ring_degree,
-            sp_size=self.server_args.sp_degree,
-            dp_size=self.server_args.dp_size,
-            distributed_init_method=f"tcp://127.0.0.1:{self.master_port}",
-            dist_timeout=self.server_args.dist_timeout,
-        )
+        with self.profiler.profile("init_distributed_environment"):
+            maybe_init_distributed_environment_and_model_parallel(
+                tp_size=self.server_args.tp_size,
+                enable_cfg_parallel=self.server_args.enable_cfg_parallel,
+                ulysses_degree=self.server_args.ulysses_degree,
+                ring_degree=self.server_args.ring_degree,
+                sp_size=self.server_args.sp_degree,
+                dp_size=self.server_args.dp_size,
+                distributed_init_method=f"tcp://127.0.0.1:{self.master_port}",
+                dist_timeout=self.server_args.dist_timeout,
+            )
 
         # set proc title
         if model_parallel_is_initialized():
@@ -129,28 +140,30 @@ class GPUWorker:
         else:
             setproctitle(f"sgl_diffusion::scheduler_{self.local_rank}")
 
-        self.pipeline = build_pipeline(self.server_args)
+        with self.profiler.profile("build_pipeline"):
+            self.pipeline = build_pipeline(self.server_args)
 
         # apply layerwise offload after lora is applied while building LoRAPipeline
         # otherwise empty offloaded weights could fail lora converting
         if self.server_args.dit_layerwise_offload:
-            # enable layerwise offload if possible
-            for dit in filter(
-                None,
-                [
-                    self.pipeline.get_module("transformer"),
-                    self.pipeline.get_module("transformer_2"),
-                    self.pipeline.get_module("video_dit"),
-                    self.pipeline.get_module("video_dit_2"),
-                    self.pipeline.get_module("audio_dit"),
-                ],
-            ):
-                if isinstance(dit, OffloadableDiTMixin):
-                    dit.configure_layerwise_offload(self.server_args)
-                else:
-                    logger.info(
-                        f"Module {type(dit).__name__} does not support layerwise offload. Skipping."
-                    )
+            with self.profiler.profile("configure_layerwise_offload"):
+                # enable layerwise offload if possible
+                for dit in filter(
+                    None,
+                    [
+                        self.pipeline.get_module("transformer"),
+                        self.pipeline.get_module("transformer_2"),
+                        self.pipeline.get_module("video_dit"),
+                        self.pipeline.get_module("video_dit_2"),
+                        self.pipeline.get_module("audio_dit"),
+                    ],
+                ):
+                    if isinstance(dit, OffloadableDiTMixin):
+                        dit.configure_layerwise_offload(self.server_args)
+                    else:
+                        logger.info(
+                            f"Module {type(dit).__name__} does not support layerwise offload. Skipping."
+                        )
 
         logger.info(
             f"Worker {self.rank}: Initialized device, model, and distributed environment."
@@ -456,10 +469,19 @@ def run_scheduler_process(
     Rank 0 acts as the master, handling ZMQ requests and coordinating slaves.
     Ranks > 0 act as slaves, waiting for tasks from the master.
     """
-    configure_logger(server_args)
-    globally_suppress_loggers()
-    if current_platform.is_cuda():
-        set_cuda_arch()
+    import time
+    process_start_time = time.perf_counter()
+
+    profiler = get_startup_profiler()
+    profiler.set_rank(rank)
+
+    with profiler.profile("configure_logger"):
+        configure_logger(server_args)
+        globally_suppress_loggers()
+
+    with profiler.profile("set_cuda_arch"):
+        if current_platform.is_cuda():
+            set_cuda_arch()
 
     port_args = PortArgs.from_server_args(server_args)
 
@@ -469,13 +491,21 @@ def run_scheduler_process(
     from sglang.multimodal_gen.runtime.managers.scheduler import Scheduler
 
     try:
-        scheduler = Scheduler(
-            server_args,
-            gpu_id=rank,
-            port_args=port_args,
-            task_pipes_to_slaves=task_pipes_to_slaves,
-            result_pipes_from_slaves=result_pipes_from_slaves,
-        )
+        with profiler.profile("Scheduler.__init__"):
+            scheduler = Scheduler(
+                server_args,
+                gpu_id=rank,
+                port_args=port_args,
+                task_pipes_to_slaves=task_pipes_to_slaves,
+                result_pipes_from_slaves=result_pipes_from_slaves,
+            )
+
+        process_init_time = (time.perf_counter() - process_start_time) * 1000
+        logger.info(f"Worker {rank}: Scheduler initialized in {process_init_time:.2f} ms")
+
+        # Print profiling summary for this worker
+        profiler.print_summary()
+
         logger.info(f"Worker {rank}: Scheduler loop started.")
         pipe_writer.send(
             {

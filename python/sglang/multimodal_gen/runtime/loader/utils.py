@@ -114,7 +114,9 @@ class skip_init_modules:
     def __enter__(self):
         # Save originals
         self._orig_reset = {}
-        for cls in (nn.Linear, nn.Conv1d, nn.Conv2d, nn.Conv3d):
+        # Include nn.Embedding - its reset_parameters() does nn.init.normal_()
+        # which is very slow for large vocab (11.8s for 152k × 3584 embedding)
+        for cls in (nn.Linear, nn.Conv1d, nn.Conv2d, nn.Conv3d, nn.Embedding):
             self._orig_reset[cls] = cls.reset_parameters
             cls.reset_parameters = lambda self: None  # skip init
 

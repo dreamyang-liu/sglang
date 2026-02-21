@@ -28,6 +28,7 @@ from sglang.multimodal_gen.runtime.utils.hf_diffusers_utils import (
     verify_model_config_and_directory,
 )
 from sglang.multimodal_gen.runtime.utils.logging_utils import init_logger
+from sglang.multimodal_gen.runtime.utils.startup_profiler import get_startup_profiler
 
 logger = init_logger(__name__)
 
@@ -70,12 +71,15 @@ class ComposedPipelineBase(ABC):
         Initialize the pipeline. After __init__, the pipeline should be ready to
         use. The pipeline should be stateless and not hold any batch state.
         """
+        self.profiler = get_startup_profiler()
         self.server_args = server_args
 
         self.model_path: str = model_path
         self._stages: list[PipelineStage] = []
         self._stage_name_mapping: dict[str, PipelineStage] = {}
-        self.executor = executor or self.build_executor(server_args=server_args)
+
+        with self.profiler.profile("build_executor"):
+            self.executor = executor or self.build_executor(server_args=server_args)
 
         if required_config_modules is not None:
             self._required_config_modules = required_config_modules
@@ -87,9 +91,11 @@ class ComposedPipelineBase(ABC):
         self.memory_usages: dict[str, float] = {}
         # Load modules directly in initialization
         logger.info("Loading pipeline modules...")
-        self.modules = self.load_modules(server_args, loaded_modules)
+        with self.profiler.profile("load_modules"):
+            self.modules = self.load_modules(server_args, loaded_modules)
 
-        self.__post_init__()
+        with self.profiler.profile("__post_init__"):
+            self.__post_init__()
 
     def build_executor(self, server_args: ServerArgs):
         # TODO
@@ -102,10 +108,13 @@ class ComposedPipelineBase(ABC):
 
     def __post_init__(self) -> None:
         assert self.server_args is not None, "server_args must be set"
-        self.initialize_pipeline(self.server_args)
+
+        with self.profiler.profile("initialize_pipeline"):
+            self.initialize_pipeline(self.server_args)
 
         logger.info("Creating pipeline stages...")
-        self.create_pipeline_stages(self.server_args)
+        with self.profiler.profile("create_pipeline_stages"):
+            self.create_pipeline_stages(self.server_args)
 
     def get_module(self, module_name: str, default_value: Any = None) -> Any:
         if module_name not in self.modules:
@@ -288,12 +297,14 @@ class ComposedPipelineBase(ABC):
                 )
             else:
                 component_model_path = os.path.join(self.model_path, load_module_name)
-            module, memory_usage = PipelineComponentLoader.load_component(
-                component_name=load_module_name,
-                component_model_path=component_model_path,
-                transformers_or_diffusers=transformers_or_diffusers,
-                server_args=server_args,
-            )
+
+            with self.profiler.profile(f"load_component_{load_module_name}"):
+                module, memory_usage = PipelineComponentLoader.load_component(
+                    component_name=load_module_name,
+                    component_model_path=component_model_path,
+                    transformers_or_diffusers=transformers_or_diffusers,
+                    server_args=server_args,
+                )
 
             self.memory_usages[load_module_name] = memory_usage
 

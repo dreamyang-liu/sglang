@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-02-20T22:54:46.397040",
+  "model_path": "Qwen/Qwen-Image",
+  "num_gpus": 1,
+  "tp_size": 1,
+  "profile": {
+    "total_time_ms": 77377.71017200066,
+    "phases": [
+      {
+        "name": "total_startup",
+        "duration_ms": 70661.93922300045,
+        "children": [
+          {
+            "name": "prepare_server_args",
+            "duration_ms": 153.9028019997204,
+            "children": []
+          },
+          {
+            "name": "launch_server",
+            "duration_ms": 70507.98135100013,
+            "children": []
+          }
+        ]
+      }
+    ],
+    "module_load_times": {}
+  }
+}

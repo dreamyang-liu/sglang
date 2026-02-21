@@ -21,6 +21,7 @@ from sglang.multimodal_gen.runtime.utils.hf_diffusers_utils import (
     verify_model_config_and_directory,
 )
 from sglang.multimodal_gen.runtime.utils.logging_utils import init_logger
+from sglang.multimodal_gen.runtime.utils.startup_profiler import get_startup_profiler
 
 logger = init_logger(__name__)
 
@@ -41,16 +42,18 @@ def build_pipeline(
     2. verify the model config and directory
     3. based on the config, determine the pipeline class
     """
+    profiler = get_startup_profiler()
     model_path = server_args.model_path
 
     # Check if pipeline class is explicitly specified
     if server_args.pipeline_class_name:
-        from sglang.multimodal_gen.registry import (
-            _PIPELINE_REGISTRY,
-            _discover_and_register_pipelines,
-        )
+        with profiler.profile("discover_and_register_pipelines"):
+            from sglang.multimodal_gen.registry import (
+                _PIPELINE_REGISTRY,
+                _discover_and_register_pipelines,
+            )
 
-        _discover_and_register_pipelines()
+            _discover_and_register_pipelines()
         logger.info(f"Requested pipeline_class_name: {server_args.pipeline_class_name}")
         logger.info(
             f"Available pipelines in registry: {list(_PIPELINE_REGISTRY.keys())}"
@@ -66,12 +69,14 @@ def build_pipeline(
         )
     else:
         logger.info("No pipeline_class_name specified, using model_index.json")
-        model_info = get_model_info(model_path, backend=server_args.backend)
+        with profiler.profile("get_model_info"):
+            model_info = get_model_info(model_path, backend=server_args.backend)
         pipeline_cls = model_info.pipeline_cls
         logger.info(f"Using pipeline from model_index.json: {pipeline_cls.__name__}")
 
     # instantiate the pipelines
-    pipeline = pipeline_cls(model_path, server_args)
+    with profiler.profile("pipeline_instantiation", {"pipeline_cls": pipeline_cls.__name__}):
+        pipeline = pipeline_cls(model_path, server_args)
 
     logger.info("Pipeline instantiated")
 

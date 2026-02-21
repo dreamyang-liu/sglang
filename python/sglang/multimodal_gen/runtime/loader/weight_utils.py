@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import tempfile
+import time
 from collections.abc import Generator, Iterable
 from pathlib import Path
 
@@ -195,6 +196,11 @@ def safetensors_weights_iterator(
             "Please retry - the files will be re-downloaded automatically."
         )
 
+    # Profiling stats
+    total_disk_read_time = 0.0
+    total_bytes_read = 0
+    num_tensors = 0
+
     if use_runai_model_streamer:
         with SafetensorsStreamer() as streamer:
             streamer.stream_files(hf_weights_files)
@@ -210,10 +216,25 @@ def safetensors_weights_iterator(
             disable=not enable_tqdm,
             bar_format=_BAR_FORMAT,
         ):
+            file_start_time = time.perf_counter()
             with safe_open(st_file, framework="pt", device=device) as f:
                 for name in f.keys():  # noqa: SIM118
+                    tensor_start = time.perf_counter()
                     param = f.get_tensor(name)
+                    tensor_time = time.perf_counter() - tensor_start
+                    total_disk_read_time += tensor_time
+                    total_bytes_read += param.numel() * param.element_size()
+                    num_tensors += 1
                     yield name, param
+
+    # Log profiling stats
+    if enable_tqdm and num_tensors > 0:
+        total_gb = total_bytes_read / (1024**3)
+        throughput = total_gb / total_disk_read_time if total_disk_read_time > 0 else 0
+        logger.info(
+            f"[Disk I/O] Read {num_tensors} tensors, {total_gb:.2f} GB in {total_disk_read_time*1000:.2f} ms "
+            f"({throughput:.2f} GB/s)"
+        )
 
 
 def _load_pt_file(bin_file: str, device: str) -> dict:

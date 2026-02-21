@@ -37,6 +37,7 @@ from sglang.multimodal_gen.runtime.server_args import (
 from sglang.multimodal_gen.runtime.utils.common import get_zmq_socket
 from sglang.multimodal_gen.runtime.utils.distributed import broadcast_pyobj
 from sglang.multimodal_gen.runtime.utils.logging_utils import GREEN, RESET, init_logger
+from sglang.multimodal_gen.runtime.utils.startup_profiler import get_startup_profiler
 
 logger = init_logger(__name__)
 
@@ -58,29 +59,34 @@ class Scheduler:
         task_pipes_to_slaves: list = None,
         result_pipes_from_slaves: list = None,
     ):
+        self.profiler = get_startup_profiler()
+        self.profiler.set_rank(gpu_id)
+
         self.server_args = server_args
         self.port_args = port_args
 
         set_global_server_args(server_args=server_args)
 
         # Inter-process Communication
-        self.context = zmq.Context(io_threads=2)
-        endpoint = server_args.scheduler_endpoint
-        if gpu_id == 0:
-            # router allocates identify (envelope) for each connection
-            self.receiver, actual_endpoint = get_zmq_socket(
-                self.context, zmq.ROUTER, endpoint, True
-            )
-            logger.info(f"Scheduler bind at endpoint: {actual_endpoint}")
-        else:
-            self.receiver = None
+        with self.profiler.profile("zmq_setup"):
+            self.context = zmq.Context(io_threads=2)
+            endpoint = server_args.scheduler_endpoint
+            if gpu_id == 0:
+                # router allocates identify (envelope) for each connection
+                self.receiver, actual_endpoint = get_zmq_socket(
+                    self.context, zmq.ROUTER, endpoint, True
+                )
+                logger.info(f"Scheduler bind at endpoint: {actual_endpoint}")
+            else:
+                self.receiver = None
 
-        worker = GPUWorker(
-            local_rank=gpu_id,
-            master_port=port_args.master_port,
-            rank=gpu_id,
-            server_args=server_args,
-        )
+        with self.profiler.profile("GPUWorker.__init__"):
+            worker = GPUWorker(
+                local_rank=gpu_id,
+                master_port=port_args.master_port,
+                rank=gpu_id,
+                server_args=server_args,
+            )
         self.worker = worker
         self.task_pipes_to_slaves = task_pipes_to_slaves
         self.result_pipes_from_slaves = result_pipes_from_slaves
@@ -108,7 +114,8 @@ class Scheduler:
         self._warmup_total = 0
         self._warmup_processed = 0
 
-        self.prepare_server_warmup_reqs()
+        with self.profiler.profile("prepare_warmup_reqs"):
+            self.prepare_server_warmup_reqs()
 
         # Maximum consecutive errors before terminating the event loop
         self._max_consecutive_errors = 3

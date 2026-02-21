@@ -329,23 +329,37 @@ class Qwen2_5_VLMLP(nn.Module):
 
 class Qwen2_5_VLTextModel(nn.Module):
     def __init__(self, config: PretrainedConfig):
+        import time
         super().__init__()
         self.config = config
         self.padding_idx = config.pad_token_id
         self.vocab_size = config.vocab_size
 
+        t0 = time.perf_counter()
         self.embed_tokens = nn.Embedding(
             config.vocab_size, config.hidden_size, self.padding_idx
         )
+        t1 = time.perf_counter()
+        logger.info(f"[TextModel Init] embed_tokens: {(t1-t0)*1000:.0f}ms")
+
+        t2 = time.perf_counter()
         self.layers = nn.ModuleList(
             [
                 Qwen2_5_VLDecoderLayer(config, layer_idx)
                 for layer_idx in range(config.num_hidden_layers)
             ]
         )
+        t3 = time.perf_counter()
+        logger.info(f"[TextModel Init] {config.num_hidden_layers} decoder layers: {(t3-t2)*1000:.0f}ms")
+
         self._attn_implementation = config._attn_implementation
         self.norm = Qwen2RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
+
+        t4 = time.perf_counter()
         self.rotary_emb = Qwen2_5_VLRotaryEmbedding(config=config)
+        t5 = time.perf_counter()
+        logger.info(f"[TextModel Init] rotary_emb: {(t5-t4)*1000:.0f}ms")
+
         self.has_sliding_layers = "sliding_attention" in self.config.layer_types
 
         self.gradient_checkpointing = False
@@ -507,14 +521,24 @@ class Qwen2_5_VLModel(nn.Module):
     _no_split_modules = ["Qwen2_5_VLDecoderLayer", "Qwen2_5_VLVisionBlock"]
 
     def __init__(self, config, enable_image_understanding: bool = False):
+        import time
         super().__init__()
+
+        t0 = time.perf_counter()
         self.language_model = Qwen2_5_VLTextModel(config.text_config)
+        t1 = time.perf_counter()
+        logger.info(f"[Model Init] Qwen2_5_VLTextModel: {(t1-t0)*1000:.0f}ms")
 
         if enable_image_understanding:
+            t2 = time.perf_counter()
             self.visual = Qwen2_5_VisionTransformerPretrainedModel._from_config(
                 config.vision_config
             )
+            t3 = time.perf_counter()
+            logger.info(f"[Model Init] VisionTransformer._from_config: {(t3-t2)*1000:.0f}ms")
             self.visual.to(torch.get_default_dtype())
+            t4 = time.perf_counter()
+            logger.info(f"[Model Init] VisionTransformer.to(dtype): {(t4-t3)*1000:.0f}ms")
         self.rope_deltas = None  # cache rope_deltas here
         self.config = config
         # Initialize weights and apply final processing
